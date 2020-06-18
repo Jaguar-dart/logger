@@ -1,11 +1,41 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:stack_trace/stack_trace.dart';
+import 'package:date_format/date_format.dart' as datefmt;
 
-abstract class Logger {
+class Logger {
+  final List<LogBackend> backends;
+
+  Logger(this.backends);
+
   Future<void> log(String level, String message,
-      {String id = '', String source, String timestamp});
+      {String id = '', String source, String timestamp}) async {
+    source ??= getLineInfo();
+    timestamp ??= datefmt.formatDate(DateTime.now().toUtc(), [
+      datefmt.yyyy,
+      '-',
+      datefmt.mm,
+      '-',
+      datefmt.dd,
+      'T',
+      datefmt.HH,
+      ':',
+      datefmt.nn,
+      ':',
+      datefmt.ss,
+      '.',
+      datefmt.SSS,
+    ]);
+
+    for (final backend in backends) {
+      await backend.append(LogRecord(
+          timestamp: timestamp,
+          level: level,
+          id: id,
+          source: source,
+          message: message));
+    }
+  }
 
   // ignore: missing_return
   Future<void> debug(String message,
@@ -41,31 +71,31 @@ String getLineInfo() {
   return '$file:${frame.line}';
 }
 
-abstract class LogTarget {
-  Future<void> append(String line);
-}
+class LogRecord {
+  final String timestamp;
 
-class FileLogTarget implements LogTarget {
-  File file;
+  final String level;
 
-  Future _locked;
+  final String id;
 
-  FileLogTarget(this.file);
+  final String source;
+
+  final String message;
+
+  LogRecord({this.timestamp, this.level, this.id, this.source, this.message});
 
   @override
-  Future<void> append(String line) async {
-    while (_locked != null) {
-      await _locked;
-    }
-    final completer = Completer();
-    _locked = completer.future;
+  String toString() => '$timestamp\t$level\t$id\t$source\t$message';
 
-    try {
-      await file.writeAsString(line + '\n', mode: FileMode.append, flush: true);
-    } catch (e) {
-      completer.complete();
-      rethrow;
-    }
-    completer.complete();
-  }
+  Map<String, dynamic> asMap() => {
+        'timestamp': timestamp,
+        'level': level,
+        'id': id,
+        'source': source,
+        'message': message,
+      };
+}
+
+abstract class LogBackend {
+  Future<void> append(LogRecord record);
 }

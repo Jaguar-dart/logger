@@ -1,34 +1,30 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:jaguar_logger/jaguar_logger.dart';
-import 'package:date_format/date_format.dart' as datefmt;
 
-class FileLogger extends Logger {
-  final LogTarget _target;
+class FileBackend implements LogBackend {
+  File file;
 
-  FileLogger(this._target);
+  Future _locked;
 
-  factory FileLogger.toFile(File file) => FileLogger(FileLogTarget(file));
+  FileBackend(this.file);
 
   @override
-  Future<void> log(String level, String message,
-      {String id = '', String source, String timestamp}) async {
-    source ??= getLineInfo();
-    timestamp ??= datefmt.formatDate(DateTime.now().toUtc(), [
-      datefmt.yyyy,
-      '-',
-      datefmt.mm,
-      '-',
-      datefmt.dd,
-      'T',
-      datefmt.HH,
-      ':',
-      datefmt.nn,
-      ':',
-      datefmt.ss,
-      '.',
-      datefmt.SSS,
-    ]);
-    await _target.append('$timestamp\t$level\t$id\t$source\t$message');
+  Future<void> append(LogRecord record) async {
+    while (_locked != null) {
+      await _locked;
+    }
+    final completer = Completer();
+    _locked = completer.future;
+
+    try {
+      await file.writeAsString(record.toString() + '\n',
+          mode: FileMode.append, flush: true);
+    } catch (e) {
+      completer.complete();
+      rethrow;
+    }
+    completer.complete();
   }
 }

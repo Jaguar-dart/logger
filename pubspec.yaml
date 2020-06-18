@@ -1,7 +1,7 @@
 name: jaguar_logger
-description: A starting point for Dart libraries or applications.
-# version: 1.0.0
-# homepage: https://www.example.com
+description: Level logger with backends for file, http and postgres with support for log rotation
+version: 1.0.0
+homepage: https://github.com/Jaguar-dart/logger
 
 environment:
   sdk: '>=2.8.1 <3.0.0'
