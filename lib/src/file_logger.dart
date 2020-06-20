@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:jaguar_logger/jaguar_logger.dart';
 
-class FileBackend implements LogBackend {
+class FileBackend<T> implements LogBackend<T> {
   File file;
 
   Future _locked;
@@ -11,7 +11,7 @@ class FileBackend implements LogBackend {
   FileBackend(this.file);
 
   @override
-  Future<void> append(LogRecord record) async {
+  Future<void> append(T record) async {
     while (_locked != null) {
       await _locked;
     }

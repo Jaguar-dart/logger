@@ -3,29 +3,33 @@ import 'dart:async';
 import 'package:stack_trace/stack_trace.dart';
 import 'package:date_format/date_format.dart' as datefmt;
 
+String stringifyTimestamp(DateTime time) {
+  return datefmt.formatDate(time.toUtc(), [
+    datefmt.yyyy,
+    '-',
+    datefmt.mm,
+    '-',
+    datefmt.dd,
+    'T',
+    datefmt.HH,
+    ':',
+    datefmt.nn,
+    ':',
+    datefmt.ss,
+    '.',
+    datefmt.SSS,
+  ]);
+}
+
 class Logger {
-  final List<LogBackend> backends;
+  final List<LogBackend<LogRecord>> backends;
 
   Logger(this.backends);
 
   Future<void> log(String level, String message,
       {String id = '', String source, String timestamp}) async {
     source ??= getLineInfo();
-    timestamp ??= datefmt.formatDate(DateTime.now().toUtc(), [
-      datefmt.yyyy,
-      '-',
-      datefmt.mm,
-      '-',
-      datefmt.dd,
-      'T',
-      datefmt.HH,
-      ':',
-      datefmt.nn,
-      ':',
-      datefmt.ss,
-      '.',
-      datefmt.SSS,
-    ]);
+    timestamp ??= stringifyTimestamp(DateTime.now().toUtc());
 
     for (final backend in backends) {
       await backend.append(LogRecord(
@@ -96,6 +100,6 @@ class LogRecord {
       };
 }
 
-abstract class LogBackend {
-  Future<void> append(LogRecord record);
+abstract class LogBackend<T> {
+  Future<void> append(T record);
 }
