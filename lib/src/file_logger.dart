@@ -21,10 +21,9 @@ class FileBackend<T> implements LogBackend<T> {
     try {
       await file.writeAsString(record.toString() + '\n',
           mode: FileMode.append, flush: true);
-    } catch (e) {
+    } finally {
       completer.complete();
-      rethrow;
+      _locked = null;
     }
-    completer.complete();
   }
 }
