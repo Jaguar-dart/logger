@@ -4,5 +4,4 @@
 library jaguar_logger;
 
 export 'src/log_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/console_logger.dart';
