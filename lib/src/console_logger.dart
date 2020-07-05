@@ -1,8 +1,8 @@
 import 'package:jaguar_logger/jaguar_logger.dart';
 
-class ConsoleBackend implements LogBackend<String> {
+class ConsoleBackend<T> implements LogBackend<T> {
   @override
-  Future<void> append(String record) async {
-    print(record);
+  Future<void> append(dynamic record) async {
+    print(record.toString());
   }
 }

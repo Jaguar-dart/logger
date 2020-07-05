@@ -4,4 +4,5 @@
 library jaguar_logger;
 
 export 'src/log_base.dart';
+export 'src/string_logger.dart';
 export 'src/console_logger.dart';

@@ -4,7 +4,8 @@ import 'package:stack_trace/stack_trace.dart';
 import 'package:date_format/date_format.dart' as datefmt;
 
 abstract class Logger {
-  factory Logger(List<LogBackend<LogRecord>> backends) = _LoggerImpl;
+  factory Logger(List<LogBackend<LogRecord>> backends, {dynamic filter}) =
+      _LoggerImpl;
 
   List<LogBackend<LogRecord>> get backends;
 
@@ -34,7 +35,11 @@ class _LoggerImpl implements Logger {
 
   dynamic /* String | Set<String> */ _filter;
 
-  _LoggerImpl(this.backends);
+  _LoggerImpl(this.backends, {dynamic filter}) {
+    if (filter != null) {
+      this.filter = filter;
+    }
+  }
 
   @override
   Future<void> log(String level, String message,
