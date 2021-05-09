@@ -10,19 +10,19 @@ abstract class Logger {
   List<LogBackend<LogRecord>> get backends;
 
   Future<void> log(String level, String message,
-      {String groupId = '', String source, String timestamp});
+      {String groupId = '', String? source, String? timestamp});
 
   Future<void> debug(String message,
-      {String groupId = '', String source, String timestamp});
+      {String groupId = '', String? source, String? timestamp});
 
   Future<void> info(String message,
-      {String groupId = '', String source, String timestamp});
+      {String groupId = '', String? source, String? timestamp});
 
   Future<void> warning(String message,
-      {String groupId = '', String source, String timestamp});
+      {String groupId = '', String? source, String? timestamp});
 
   Future<void> error(String message,
-      {String groupId = '', String source, String timestamp});
+      {String groupId = '', String? source, String? timestamp});
 
   set filter(dynamic value);
 
@@ -32,7 +32,6 @@ abstract class Logger {
 class _LoggerImpl implements Logger {
   @override
   final List<LogBackend<LogRecord>> backends;
-
   dynamic /* String | Set<String> */ _filter;
 
   _LoggerImpl(this.backends, {dynamic filter}) {
@@ -43,10 +42,10 @@ class _LoggerImpl implements Logger {
 
   @override
   Future<void> log(String level, String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     if (_filter != null) {
       if (_filter is String) {
-        if ((knownLevels[level] ?? double.infinity) > knownLevels[_filter]) {
+        if ((knownLevels[level] ?? double.infinity) > knownLevels[_filter]!) {
           return;
         }
       } else {
@@ -71,7 +70,7 @@ class _LoggerImpl implements Logger {
 
   @override
   Future<void> debug(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('DEBUG', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -79,7 +78,7 @@ class _LoggerImpl implements Logger {
 
   @override
   Future<void> info(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('INFO', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -87,7 +86,7 @@ class _LoggerImpl implements Logger {
 
   @override
   Future<void> warning(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('WARNING', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -95,7 +94,7 @@ class _LoggerImpl implements Logger {
 
   @override
   Future<void> error(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('ERROR', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -103,6 +102,11 @@ class _LoggerImpl implements Logger {
 
   @override
   set filter(dynamic value) {
+    if (value == null) {
+      _filter = null;
+      return;
+    }
+
     if (value is String) {
       switch (value) {
         case 'ERROR':
@@ -114,8 +118,13 @@ class _LoggerImpl implements Logger {
         default:
           throw Exception('Invalid level');
       }
-    } else if (value is Set<String>) {
+    } else if (value is Iterable<String>) {
+      if (!value.any((element) => !knownLevels.containsKey(element))) {
+        throw Exception('');
+      }
       _filter = value.toSet();
+    } else {
+      throw Exception('unknown filter type');
     }
   }
 
@@ -141,17 +150,17 @@ String getLineInfo() {
 
 class LogRecord {
   final String timestamp;
-
   final String level;
-
   final String groupId;
-
   final String source;
-
   final String message;
 
   LogRecord(
-      {this.timestamp, this.level, this.groupId, this.source, this.message});
+      {required this.timestamp,
+      required this.level,
+      required this.groupId,
+      required this.source,
+      required this.message});
 
   @override
   String toString() => '$timestamp\t$level\t$groupId\t$source\t$message';
@@ -171,7 +180,6 @@ abstract class LogBackend<T> {
 
 class LoggerWith implements Logger {
   final Logger _inner;
-
   final String withGroupId;
 
   LoggerWith(this._inner, {this.withGroupId = ''});
@@ -181,7 +189,7 @@ class LoggerWith implements Logger {
 
   @override
   Future<void> log(String level, String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await _inner.log(level, message,
         groupId: groupId.isNotEmpty ? groupId : withGroupId,
@@ -192,14 +200,15 @@ class LoggerWith implements Logger {
   // ignore: missing_return
   @override
   Future<void> debug(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('DEBUG', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
 
+  @override
   Future<void> info(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('INFO', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -207,7 +216,7 @@ class LoggerWith implements Logger {
 
   @override
   Future<void> warning(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('WARNING', message,
         groupId: groupId, source: source, timestamp: timestamp);
@@ -215,7 +224,7 @@ class LoggerWith implements Logger {
 
   @override
   Future<void> error(String message,
-      {String groupId = '', String source, String timestamp}) async {
+      {String groupId = '', String? source, String? timestamp}) async {
     source ??= getLineInfo();
     await log('ERROR', message,
         groupId: groupId, source: source, timestamp: timestamp);

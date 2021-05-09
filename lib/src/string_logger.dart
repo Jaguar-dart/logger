@@ -6,7 +6,7 @@ class StringLogger {
   StringLogger(this.backends);
 
   Future<void> log(String line) async {
-    for(final backend in backends) {
+    for (final backend in backends) {
       await backend.append(line);
     }
   }

@@ -6,7 +6,7 @@ import 'package:jaguar_logger/jaguar_logger.dart';
 class FileBackend<T> implements LogBackend<T> {
   File file;
 
-  Future _locked;
+  Future? _locked;
 
   FileBackend(this.file);
 
