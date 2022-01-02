@@ -140,6 +140,12 @@ class _LoggerImpl implements Logger {
   };
 }
 
+extension StackTraceLog on StackTrace {
+  String logLine({int depth = 1}) {
+    return Trace.from(this).logLine(depth: depth);
+  }
+}
+
 extension TraceLog on Trace {
   String logLine({int depth = 1}) {
     final parts = <String>[];

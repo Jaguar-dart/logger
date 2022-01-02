@@ -1,3 +1,6 @@
+## 1.0.3
++ Added `StackTrace.logLine` extension method
+
 ## 1.0.2
 + Added back `FileBackend`
 

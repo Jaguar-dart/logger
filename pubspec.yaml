@@ -1,6 +1,6 @@
 name: jaguar_logger
 description: Level logger with backends for file, http and postgres with support for log rotation
-version: 1.0.2
+version: 1.0.3
 homepage: https://github.com/Jaguar-dart/logger
 
 environment:
