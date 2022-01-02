@@ -55,7 +55,7 @@ class _LoggerImpl implements Logger {
       }
     }
 
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     timestamp ??= stringifyTimestamp(DateTime.now().toUtc());
 
     for (final backend in backends) {
@@ -71,7 +71,7 @@ class _LoggerImpl implements Logger {
   @override
   Future<void> debug(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('DEBUG', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -79,7 +79,7 @@ class _LoggerImpl implements Logger {
   @override
   Future<void> info(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('INFO', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -87,7 +87,7 @@ class _LoggerImpl implements Logger {
   @override
   Future<void> warning(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('WARNING', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -95,7 +95,7 @@ class _LoggerImpl implements Logger {
   @override
   Future<void> error(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('ERROR', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -140,12 +140,18 @@ class _LoggerImpl implements Logger {
   };
 }
 
-String getLineInfo() {
-  final trace = Trace.current(2);
-
-  final frame = trace.frames.first;
-  final file = frame.uri.pathSegments.last;
-  return '$file:${frame.line}';
+extension TraceLog on Trace {
+  String logLine({int depth = 1}) {
+    final parts = <String>[];
+    for (final frame in frames) {
+      final file = frame.uri.pathSegments.last;
+      parts.add('$file:${frame.line}');
+      if (--depth == 0) {
+        break;
+      }
+    }
+    return parts.join(';');
+  }
 }
 
 class LogRecord {
@@ -190,7 +196,7 @@ class LoggerWith implements Logger {
   @override
   Future<void> log(String level, String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await _inner.log(level, message,
         groupId: groupId.isNotEmpty ? groupId : withGroupId,
         source: source,
@@ -201,7 +207,7 @@ class LoggerWith implements Logger {
   @override
   Future<void> debug(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('DEBUG', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -209,7 +215,7 @@ class LoggerWith implements Logger {
   @override
   Future<void> info(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('INFO', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -217,7 +223,7 @@ class LoggerWith implements Logger {
   @override
   Future<void> warning(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('WARNING', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
@@ -225,7 +231,7 @@ class LoggerWith implements Logger {
   @override
   Future<void> error(String message,
       {String groupId = '', String? source, String? timestamp}) async {
-    source ??= getLineInfo();
+    source ??= Trace.current(1).logLine();
     await log('ERROR', message,
         groupId: groupId, source: source, timestamp: timestamp);
   }
